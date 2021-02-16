@@ -7,6 +7,11 @@ from datetime import datetime
 
 path = 'Images'
 images = []
+FRAMES_TO_CAPTURE = 6
+curr_frame = 0
+ON = True
+
+
 # classNames = []
 # myList = os.listdir(path)
 # print(myList)
@@ -26,8 +31,9 @@ def find_encodings(images):
     return encode_list
 
 
-def markAttendance(name):
-    pass
+def mark_attendance(user_id):
+    print(user_id, 'was seen')
+    cap.release()
 
 
 # encodeListKnown = find_encodings(images)
@@ -48,7 +54,7 @@ label_names = {v: k for k, v in label_names.items()}
 
 cap = cv2.VideoCapture(0)
 
-while True:
+while cap.isOpened():
     success, img = cap.read()
     # img = captureScreen()
     imgS = cv2.resize(img, (0, 0), None, 0.25, 0.25)
@@ -72,7 +78,14 @@ while True:
             cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
             cv2.putText(img, name, (x1 + 6, y2 - 12), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
-            # markAttendance(name)
+            mark_attendance(name)
+        else:
+            if curr_frame < FRAMES_TO_CAPTURE:
+                print("Saving Frame")
+                cv2.imwrite(f"{curr_frame + 1}.jpg", img)
+                curr_frame += 1
+            else:
+                cap.release()
 
     cv2.imshow('Face Recognition', img)
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -80,3 +93,12 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
+
+# Add to Images folder if new faces were seen
+files = [file for file in os.listdir() if file.endswith("jpg") or file.endswith('png')]
+if files:
+    name = input("Name of the new person:")
+    if not os.path.exists(os.path.join("Images", name)):
+        os.mkdir(os.path.join("Images", name))
+    for file in files:
+        os.replace(file, f'{os.path.join("Images", os.path.join(name, file))}')

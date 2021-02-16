@@ -66,7 +66,7 @@ for root, dirs, files in os.walk(image_dir):
                 cv2.rectangle(image_array, (left, top), (right, bottom), (0, 255, 0), 2)
                 cv2.imshow('Face Image', image_array)
                 print(id_)
-                cv2.waitKey()
+                # cv2.waitKey()
 
                 x_locations.append(roi)
                 x_encodings.append(encoding)
