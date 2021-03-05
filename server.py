@@ -22,7 +22,13 @@ CAM_ON = True
 
 conn = sqlite3.connect(db_name)
 conn.execute('''CREATE TABLE IF NOT EXISTS info
-            (id integer, name text, temp real)''')
+            (id integer PRIMARY KEY, name text, temp real)''')
+try:
+    conn.execute('''
+                INSERT INTO info(id, name, temp) VALUES (1,NULL,NULL)
+                ''')
+except sqlite3.IntegrityError:
+    pass
 conn.commit()
 conn.close()
 
