@@ -4,3 +4,5 @@ cmake
 dlib
 face-recognition
 Flask
+requests
+firebase-admin

@@ -4,6 +4,22 @@
   </head>
   <body>
     <h1>Streaming</h1>
-    <img src="{{ url_for('video_feed') }}" />
+    <div style="min-height: 265px">
+      <img src="{{ url_for('video_feed') }}" alt="Streaming Face cam" />
+    </div>
+  <script>
+    setInterval(()=>{
+      fetch("/log")
+      .then((response)=>{
+        return response.json()
+      })
+      .then((data)=>{
+        if(data.name && data.temp){
+          window.location.replace("/info");
+        }
+      })
+      .catch(err=>console.log(err))
+    }, 3000)
+  </script>
   </body>
 </html>

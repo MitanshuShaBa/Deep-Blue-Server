@@ -1,0 +1,65 @@
+<html>
+<head>
+    <title>Info Page</title>
+</head>
+<body>
+    <form id="info_form">
+        <div>Id: <input id="id" name="id"></div>
+        <div>Name: <input id="name" name="name"></div>
+        <div>Temperature: <input id="temp" name="temp"></div>
+        <div>Purpose: <input id="purpose" name="purpose"></div>
+        <input type="submit">
+    </form>
+    <script>
+        let userIdDiv = document.getElementById("id")
+        let nameDiv = document.getElementById("name")
+        let tempDiv = document.getElementById("temp")
+        let purposeDiv = document.getElementById("purpose")
+        fetch("/log")
+          .then((response)=>{
+            return response.json()
+          })
+          .then((data)=>{
+            let userId = data.name
+
+            fetch("/username/"+userId)
+            .then((response)=>{
+                return response.json()
+            })
+            .then((data)=>{
+                nameDiv.value = data.name
+            })
+            .catch(err=>console.log(err))
+
+            userIdDiv.value = userId
+            tempDiv.value = data.temp
+          })
+          .catch(err=>console.log(err))
+
+        window.addEventListener("load", function() {
+          document.getElementById('info_form').addEventListener("submit", function(e) {
+            e.preventDefault(); // before the code
+            data = {
+                user_id: userIdDiv.value,
+                temp: tempDiv.value,
+                purpose: purposeDiv.value,
+            }
+            fetch("/visit_log",{
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then((response)=>{
+                return response.text()
+              })
+            .then(data=>{console.log(data)})
+            .catch(err=>console.log('error',err))
+          })
+        });
+
+
+    </script>
+</body>
+</html>
