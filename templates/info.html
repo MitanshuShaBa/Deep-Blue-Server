@@ -22,14 +22,16 @@
           .then((data)=>{
             let userId = data.name
 
-            fetch("/username/"+userId)
-            .then((response)=>{
-                return response.json()
-            })
-            .then((data)=>{
-                nameDiv.value = data.name
-            })
-            .catch(err=>console.log(err))
+            if(userId !== "New Person"){
+                fetch("/username/"+userId)
+                .then((response)=>{
+                    return response.json()
+                })
+                .then((data)=>{
+                    nameDiv.value = data.name
+                })
+                .catch(err=>console.log(err))
+            }
 
             userIdDiv.value = userId
             tempDiv.value = data.temp

@@ -4,22 +4,112 @@
   </head>
   <body>
     <h1>Streaming</h1>
-    <div style="min-height: 265px">
-      <img src="{{ url_for('video_feed') }}" alt="Streaming Face cam" />
+    <div style="height: 265px; margin-bottom: 10px">
+      <img id="streaming" style="max-height: 265px" src="{{ url_for('video_feed') }}" alt="Streaming Face cam" />
     </div>
+    <form id="info_form" hidden="true">
+        <div>Id: <input id="id" name="id"></div>
+        <div>Name: <input id="name" name="name"></div>
+        <div>Temperature: <input id="temp" name="temp"></div>
+        <div>Purpose: <input id="purpose" name="purpose"></div>
+        <input type="submit">
+    </form>
   <script>
+    let userIdDiv = document.getElementById("id")
+    let nameDiv = document.getElementById("name")
+    let tempDiv = document.getElementById("temp")
+    let purposeDiv = document.getElementById("purpose")
+
     setInterval(()=>{
       fetch("/log")
       .then((response)=>{
         return response.json()
       })
       .then((data)=>{
+        let userId = data.name
+
         if(data.name && data.temp){
-          window.location.replace("/info");
+          document.getElementById("info_form").hidden = false
+          tempDiv.value = data.temp
+
+          if(userId !== "New Person"){
+            fetch("/username/"+userId)
+            .then((response)=>{
+                return response.json()
+            })
+            .then((data)=>{
+                nameDiv.value = data.name
+            })
+            .catch(err=>console.log(err))
+
+            userIdDiv.value = userId
+          }
+
+
+        }
+        else{
+          document.getElementById("info_form").hidden = true
         }
       })
       .catch(err=>console.log(err))
     }, 3000)
+
+
+<!--    fetch("/log")-->
+<!--      .then((response)=>{-->
+<!--        return response.json()-->
+<!--      })-->
+<!--      .then((data)=>{-->
+<!--        let userId = data.name-->
+
+<!--        if(userId !== "New Person"){-->
+<!--            fetch("/username/"+userId)-->
+<!--            .then((response)=>{-->
+<!--                return response.json()-->
+<!--            })-->
+<!--            .then((data)=>{-->
+<!--                nameDiv.value = data.name-->
+<!--            })-->
+<!--            .catch(err=>console.log(err))-->
+<!--        }-->
+
+<!--        userIdDiv.value = userId-->
+<!--        tempDiv.value = data.temp-->
+<!--      })-->
+<!--      .catch(err=>console.log(err))-->
+
+    window.addEventListener("load", function() {
+      document.getElementById('info_form').addEventListener("submit", function(e) {
+        e.preventDefault(); // before the code
+        data = {
+            user_id: userIdDiv.value,
+            temp: tempDiv.value,
+            purpose: purposeDiv.value,
+        }
+        fetch("/visit_log",{
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then((response)=>{
+            return response.text()
+          })
+        .then(data=>{
+          let img = document.getElementById("streaming")
+
+          console.log(data)
+
+          fetch("/reset")
+          .then(response=>response.text())
+          .then(data=>console.log(data))
+
+          img.src = "{{ url_for('video_feed') }}?t=" + new Date().getTime()
+        })
+        .catch(err=>console.log('error',err))
+      })
+    });
   </script>
   </body>
 </html>

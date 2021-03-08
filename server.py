@@ -49,9 +49,6 @@ with open("labels-to-name.pickle", 'rb') as f:
 @app.route('/')
 def index():
     """Video streaming home page."""
-    if not CAM_ON:
-        return redirect("/log")
-    session['name'] = 'Mitanshu'
     return render_template('index.html', getName=ASK_NAME)
 
 
@@ -87,12 +84,12 @@ def gen():
 
                 if matches[matchIndex]:
                     # name = classNames[matchIndex].upper()
-                    name = label_names[faceLabels[matchIndex]].upper()
+                    name = label_names[faceLabels[matchIndex]]
                     y1, x2, y2, x1 = faceLoc
                     y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
                     cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
                     cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
-                    cv2.putText(img, name, (x1 + 6, y2 - 12), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+                    cv2.putText(img, name.upper(), (x1 + 6, y2 - 12), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
                     mark_attendance(name)
                 else:
                     if curr_frame < FRAMES_TO_CAPTURE:
