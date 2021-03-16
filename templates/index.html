@@ -39,6 +39,13 @@
             })
             .then((data)=>{
                 nameDiv.value = data.name
+                fetch("/displayName", {
+                  method: 'POST', 
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({displayName: data.name})
+                })
             })
             .catch(err=>console.log(err))
 
