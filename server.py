@@ -157,7 +157,7 @@ def set_info():
 @app.route('/displayName', methods=['POST'])
 def set_display_name():
     conn = sqlite3.connect(db_name)
-    name = request.json['displayName']
+    displayName = request.json['displayName']
     conn.execute(f'''UPDATE info SET displayName="{displayName}" WHERE id=1 ''')
     conn.commit()
     conn.close()
