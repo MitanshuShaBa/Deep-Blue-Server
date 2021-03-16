@@ -13,6 +13,8 @@ from firebase_admin import credentials, firestore
 app = Flask(__name__, static_folder='static')
 db_name = 'tmp.db'
 app.secret_key = 'Deep Blue'
+BASE_URL = "localhost"
+# BASE_URL = "192.168.0.100"
 cred = credentials.Certificate("deep-blue-asst-firebase-adminsdk-w87p0-6efd8bff07.json")
 firebase_app = firebase_admin.initialize_app(cred)
 firestore_db = firestore.client(firebase_app)
@@ -58,11 +60,12 @@ def gen():
     curr_frame = 0
 
     cap = cv2.VideoCapture(0)
+    # cap = cv2.VideoCapture("rtsp://192.168.0.105:8554/mjpeg/1")
 
     def mark_attendance(user_id):
         print(user_id, 'was seen')
         cap.release()
-        r = requests.post('http://localhost:5000/face_info', json={"name": user_id})
+        r = requests.post(f'http://{BASE_URL}:5000/face_info', json={"name": user_id})
         CAM_ON = False
 
     # Read until video is completed
@@ -190,4 +193,4 @@ def log_to_firebase():
 
 
 if __name__ == "__main__":
-    app.run('localhost', 5000, debug=True)
+    app.run(BASE_URL, 5000, debug=True)

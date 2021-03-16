@@ -1,19 +1,137 @@
 <html>
   <head>
     <title>Streaming</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <style media="screen">
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      padding-top: 15px;
+      padding-bottom: 20px;
+      letter-spacing: 4px;
+    }
+
+    .main-stream{
+      display: block;
+      margin-left: 37%;
+      margin-right: 25%;
+    }
+
+    .form1{
+      display: block;
+      text-align: center;
+    }
+    #streaming{
+      height: 265px;
+      margin-bottom: 40px;
+    }
+    #info_form {
+      align-content: center;
+    }
+
+    .main-form {
+      align-content: center;
+    }
+    .info-form {
+      padding-bottom: 10px;
+    }
+    label {
+      display: inline-block;
+      width: 100px;
+    }
+    button{
+      padding: 5px 20px;
+      margin: 10px;
+    }
+    </style>
   </head>
   <body>
-    <h1>Streaming</h1>
-    <div style="height: 265px; margin-bottom: 10px">
-      <img id="streaming" style="max-height: 265px" src="{{ url_for('video_feed') }}" alt="Streaming Face cam" />
+    <h1>STREAMING</h1>
+    <div class="main-stream">
+      <img id="streaming"  src="{{ url_for('video_feed') }}" alt="Streaming Face cam" />
     </div>
-    <form id="info_form" hidden="true">
-        <div>Id: <input id="id" name="id"></div>
-        <div>Name: <input id="name" name="name"></div>
-        <div>Temperature: <input id="temp" name="temp"></div>
-        <div>Purpose: <input id="purpose" name="purpose"></div>
-        <input type="submit">
-    </form>
+
+    <div class="form1">
+      <form id="info_form" hidden="true">
+          <div class="main-form">
+            <div class="info-form">
+              <label for="id">ID : </label>
+              <input id="id" name="id">
+            </div>
+            <div class="info-form">
+              <label for="name">Name : </label>
+              <input id="name" name="name">
+            </div>
+            <div class="info-form">
+              <label for="temp">Temperature : </label>
+              <input id="temp" name="temp">
+            </div>
+            <div class="info-form">
+              <label for="purpose">Purpose : </label>
+              <input type="text" name="purpose">
+            </div>
+            <!-- <div>
+              <button class="btn btn-primary" type="submit" name="button">Submit</button>
+            </div> -->
+            <div class="info_form">
+              <button class="btn-primary" type="button" name="entry">Entry</button>
+              <button class="btn-primary" type="button" name="exit">Exit</button>
+            </div>
+          </div>
+      </form>
+      <form class="" >
+        <div class="info-form">
+          <label for="name">Address : </label>
+          <input id="name" name="name">
+        </div>
+        <div class="info-form">
+          <label for="name">Date Of Birth : </label>
+          <input id="name" name="name">
+        </div>
+        <div class="info-form">
+          <label for="name">Email : </label>
+          <input id="name" name="name">
+        </div>
+        <div class="info-form">
+          <label for="name">Gender : </label>
+          <input id="name" name="name">
+        </div>
+        <div class="info-form">
+          <label for="name">Name : </label>
+          <input id="name" name="name">
+        </div>
+        <div class="info-form">
+          <label for="name">Phone No. : </label>
+          <input id="name" name="name">
+        </div>
+        <div class="info-form">
+          <label for="name">Photo upload link : </label>
+          <input id="name" name="name">
+        </div>
+        <div class="info-form">
+          <label for="name">Role : </label>
+          <input id="name" name="name">
+        </div>
+        <div class="info-form">
+          <label for="name">Temperature : </label>
+          <input id="name" name="name">
+        </div>
+        <div class="info-form">
+          <label for="name">Mask : </label>
+          <input id="name" name="name">
+        </div>
+        <div class="info_form">
+          <button class="btn-primary" type="button" name="register">Register</button>
+
+        </div>
+      </form>
+    </div>
   <script>
     let userIdDiv = document.getElementById("id")
     let nameDiv = document.getElementById("name")
@@ -111,5 +229,10 @@
       })
     });
   </script>
+
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
   </body>
 </html>
