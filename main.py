@@ -33,7 +33,7 @@ def find_encodings(images):
 
 def mark_attendance(user_id):
     print(user_id, 'was seen')
-    cap.release()
+    # cap.release()
 
 
 # encodeListKnown = find_encodings(images)
@@ -85,7 +85,8 @@ while cap.isOpened():
                 cv2.imwrite(f"{curr_frame + 1}.jpg", img)
                 curr_frame += 1
             else:
-                cap.release()
+                pass
+                # cap.release()
 
     cv2.imshow('Face Recognition', img)
     if cv2.waitKey(1) & 0xFF == ord('q'):
