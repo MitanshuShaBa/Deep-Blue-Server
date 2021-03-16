@@ -24,10 +24,10 @@ CAM_ON = True
 
 conn = sqlite3.connect(db_name)
 conn.execute('''CREATE TABLE IF NOT EXISTS info
-            (id integer PRIMARY KEY, name text, temp real)''')
+            (id integer PRIMARY KEY, name text, temp real, displayName text)''')
 try:
     conn.execute('''
-                INSERT INTO info(id, name, temp) VALUES (1,NULL,NULL)
+                INSERT INTO info(id, name, temp, displayName) VALUES (1,NULL,NULL,NULL)
                 ''')
 except sqlite3.IntegrityError:
     pass
@@ -124,8 +124,8 @@ def log():
     cur.execute(f'''SELECT * FROM info''')
     rows = cur.fetchall()
     conn.close()
-    _, name, temp = rows[0]
-    return {"name": name, "temp": temp}
+    _, name, temp, displayName = rows[0]
+    return {"name": name, "temp": temp, "displayName": displayName}
 
 
 @app.route('/temp', methods=['POST'])
@@ -161,7 +161,7 @@ def set_info():
 @app.route('/reset')
 def reset():
     conn = sqlite3.connect(db_name)
-    conn.execute(f'''UPDATE info SET name=NULL, temp=NULL WHERE id=1 ''')
+    conn.execute(f'''UPDATE info SET name=NULL, temp=NULL, displayName=NULL WHERE id=1 ''')
     conn.commit()
     conn.close()
 
