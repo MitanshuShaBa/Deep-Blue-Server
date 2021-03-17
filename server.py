@@ -1,14 +1,19 @@
 import datetime
-import time
-import cv2
 import pickle
-import face_recognition
-import numpy as np
-from flask import Flask, render_template, Response, request, json, jsonify, redirect, url_for, session, has_app_context
-import requests
 import sqlite3
+import time
+
+import imutils
+import cv2
+import face_recognition
 import firebase_admin
+import numpy as np
+import requests
 from firebase_admin import credentials, firestore
+from flask import Flask, render_template, Response, request, json
+from tensorflow.keras.models import load_model
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+from tensorflow.keras.preprocessing.image import img_to_array
 
 app = Flask(__name__, static_folder='static')
 db_name = 'tmp.db'
@@ -24,15 +29,17 @@ CAM_ON = True
 
 conn = sqlite3.connect(db_name)
 conn.execute('''CREATE TABLE IF NOT EXISTS info
-            (id integer PRIMARY KEY, name text, temp real, displayName text)''')
+            (id integer PRIMARY KEY, name text, temp real, mask integer, displayName text)''')
 try:
     conn.execute('''
-                INSERT INTO info(id, name, temp, displayName) VALUES (1,NULL,NULL,NULL)
+                INSERT INTO info(id, name, temp, mask, displayName) VALUES (1,NULL,NULL,NULL,NULL)
                 ''')
 except sqlite3.IntegrityError:
     pass
 conn.commit()
 conn.close()
+
+maskNet = load_model("Face-Mask-Detection/mask_detector.model")
 
 with open('face-encodings.pickle', 'rb') as f:
     encodeListKnown = pickle.load(f)
@@ -58,20 +65,47 @@ def gen():
     """Video streaming generator function."""
     global ASK_NAME
     curr_frame = 0
+    user_id = None
+    mask_on_off = None
 
     cap = cv2.VideoCapture(0)
     # cap = cv2.VideoCapture("rtsp://192.168.0.105:8554/mjpeg/1")
 
-    def mark_attendance(user_id):
-        print(user_id, 'was seen')
-        cap.release()
-        r = requests.post(f'http://{BASE_URL}:5000/face_info', json={"name": user_id})
-        CAM_ON = False
+    def detect_and_predict_mask(frame, maskNet):
+        nonlocal mask_on_off
+        face = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        face = cv2.resize(face, (224, 224))
+        face = img_to_array(face)
+        face = preprocess_input(face)
+
+        faces = [face]
+        faces = np.array(faces, dtype="float32")
+
+        preds = maskNet.predict(faces, batch_size=32)
+        # print(preds)
+        (mask, withoutMask) = preds[0]
+        label = "Mask" if mask > withoutMask else "No Mask"
+        label = "{}: {:.2f}%".format(label, max(mask, withoutMask) * 100)
+        if mask > withoutMask and mask > 0.9:
+            print(label)
+            mask_on_off = 1
+            r = requests.post('http://localhost:5000/mask', json={"mask": 1})
+        if withoutMask > mask and withoutMask > 0.9:
+            print(label)
+            r = requests.post('http://localhost:5000/mask', json={"mask": 0})
+            mask_on_off = 0
+
+    def mark_attendance(user_id_detected):
+        nonlocal user_id
+        print(user_id_detected, 'was seen')
+        user_id = user_id_detected
+        r = requests.post('http://localhost:5000/face_info', json={"name": user_id})
 
     # Read until video is completed
     while CAM_ON:
         # Capture frame-by-frame
         ret, img = cap.read()
+        mask_frame = imutils.resize(img, width=400)
         if ret:
             imgS = cv2.resize(img, (0, 0), None, 0.25, 0.25)
             imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
@@ -93,6 +127,7 @@ def gen():
                     cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
                     cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
                     cv2.putText(img, name.upper(), (x1 + 6, y2 - 12), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+                    detect_and_predict_mask(mask_frame, maskNet)
                     mark_attendance(name)
                 else:
                     if curr_frame < FRAMES_TO_CAPTURE:
@@ -107,6 +142,10 @@ def gen():
             yield b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
             time.sleep(0.01)
         else:
+            break
+        if user_id is not None and mask_on_off is not None:
+            print("Stopping stream...")
+            cap.release()
             break
 
 
@@ -124,8 +163,8 @@ def log():
     cur.execute(f'''SELECT * FROM info''')
     rows = cur.fetchall()
     conn.close()
-    _, name, temp, displayName = rows[0]
-    return {"name": name, "temp": temp, "displayName": displayName}
+    _, name, temp, mask, displayName = rows[0]
+    return {"name": name, "temp": temp, "mask": mask, "displayName": displayName}
 
 
 @app.route('/temp', methods=['POST'])
@@ -168,10 +207,21 @@ def set_display_name():
     return {"displayName": displayName}
 
 
+@app.route('/mask', methods=['POST'])
+def set_mask():
+    conn = sqlite3.connect(db_name)
+    mask = request.json['mask']
+    conn.execute(f'''UPDATE info SET mask="{mask}" WHERE id=1 ''')
+    conn.commit()
+    conn.close()
+
+    return {"mask": mask}
+
+
 @app.route('/reset')
 def reset():
     conn = sqlite3.connect(db_name)
-    conn.execute(f'''UPDATE info SET name=NULL, temp=NULL, displayName=NULL WHERE id=1 ''')
+    conn.execute(f'''UPDATE info SET name=NULL, temp=NULL, mask=NULL, displayName=NULL WHERE id=1 ''')
     conn.commit()
     conn.close()
 

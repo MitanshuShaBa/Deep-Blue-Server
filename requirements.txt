@@ -6,3 +6,9 @@ face-recognition
 Flask
 requests
 firebase-admin
+tensorflow==2.4.1
+keras==2.3.1
+imutils==0.5.3
+scipy==1.4.1
+scikit-learn
+matplotlib
