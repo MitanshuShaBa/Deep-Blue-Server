@@ -18,6 +18,8 @@ from tensorflow.keras.preprocessing.image import img_to_array
 app = Flask(__name__, static_folder='static')
 db_name = 'tmp.db'
 app.secret_key = 'Deep Blue'
+BASE_URL = "localhost"
+# BASE_URL = "192.168.0.100"
 cred = credentials.Certificate("deep-blue-asst-firebase-adminsdk-w87p0-6efd8bff07.json")
 firebase_app = firebase_admin.initialize_app(cred)
 firestore_db = firestore.client(firebase_app)
@@ -27,10 +29,10 @@ CAM_ON = True
 
 conn = sqlite3.connect(db_name)
 conn.execute('''CREATE TABLE IF NOT EXISTS info
-            (id integer PRIMARY KEY, name text, temp real, mask integer)''')
+            (id integer PRIMARY KEY, name text, temp real, mask integer, displayName text)''')
 try:
     conn.execute('''
-                INSERT INTO info(id, name, temp,mask) VALUES (1,NULL,NULL,0)
+                INSERT INTO info(id, name, temp, mask, displayName) VALUES (1,NULL,NULL,NULL,NULL)
                 ''')
 except sqlite3.IntegrityError:
     pass
@@ -67,6 +69,7 @@ def gen():
     mask_on_off = None
 
     cap = cv2.VideoCapture(0)
+    # cap = cv2.VideoCapture("rtsp://192.168.0.105:8554/mjpeg/1")
 
     def detect_and_predict_mask(frame, maskNet):
         nonlocal mask_on_off
@@ -160,8 +163,8 @@ def log():
     cur.execute(f'''SELECT * FROM info''')
     rows = cur.fetchall()
     conn.close()
-    _, name, temp, mask = rows[0]
-    return {"name": name, "temp": temp, "mask": mask}
+    _, name, temp, mask, displayName = rows[0]
+    return {"name": name, "temp": temp, "mask": mask, "displayName": displayName}
 
 
 @app.route('/temp', methods=['POST'])
@@ -193,6 +196,16 @@ def set_info():
 
     return {"name": name}
 
+@app.route('/displayName', methods=['POST'])
+def set_display_name():
+    conn = sqlite3.connect(db_name)
+    displayName = request.json['displayName']
+    conn.execute(f'''UPDATE info SET displayName="{displayName}" WHERE id=1 ''')
+    conn.commit()
+    conn.close()
+
+    return {"displayName": displayName}
+
 
 @app.route('/mask', methods=['POST'])
 def set_mask():
@@ -208,7 +221,7 @@ def set_mask():
 @app.route('/reset')
 def reset():
     conn = sqlite3.connect(db_name)
-    conn.execute(f'''UPDATE info SET name=NULL, temp=NULL, mask=NULL WHERE id=1 ''')
+    conn.execute(f'''UPDATE info SET name=NULL, temp=NULL, mask=NULL, displayName=NULL WHERE id=1 ''')
     conn.commit()
     conn.close()
 
@@ -240,4 +253,4 @@ def log_to_firebase():
 
 
 if __name__ == "__main__":
-    app.run('localhost', 5000, debug=True)
+    app.run(BASE_URL, 5000, debug=True)
