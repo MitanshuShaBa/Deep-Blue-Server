@@ -20,7 +20,8 @@ db_name = 'tmp.db'
 app.secret_key = 'Deep Blue'
 BASE_URL = "localhost"
 # BASE_URL = "192.168.69.163"
-cred = credentials.Certificate("deep-blue-asst-firebase-adminsdk-w87p0-6efd8bff07.json")
+cred = credentials.Certificate(
+    "deep-blue-asst-firebase-adminsdk-w87p0-6efd8bff07.json")
 firebase_app = firebase_admin.initialize_app(cred)
 firestore_db = firestore.client(firebase_app)
 FRAMES_TO_CAPTURE = 6
@@ -99,7 +100,8 @@ def gen():
         nonlocal user_id
         print(user_id_detected, 'was seen')
         user_id = user_id_detected
-        r = requests.post(f'http://{BASE_URL}:5000/face_info', json={"name": user_id})
+        r = requests.post(
+            f'http://{BASE_URL}:5000/face_info', json={"name": user_id})
 
     # Read until video is completed
     while CAM_ON:
@@ -111,11 +113,14 @@ def gen():
             imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
 
             facesCurFrame = face_recognition.face_locations(imgS)
-            encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
+            encodesCurFrame = face_recognition.face_encodings(
+                imgS, facesCurFrame)
 
             for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
-                matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
-                faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
+                matches = face_recognition.compare_faces(
+                    encodeListKnown, encodeFace)
+                faceDis = face_recognition.face_distance(
+                    encodeListKnown, encodeFace)
                 # print(faceDis)
                 matchIndex = np.argmin(faceDis)
 
@@ -125,8 +130,10 @@ def gen():
                     y1, x2, y2, x1 = faceLoc
                     y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
                     cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 255, 0), cv2.FILLED)
-                    cv2.putText(img, name.upper(), (x1 + 6, y2 - 12), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+                    cv2.rectangle(img, (x1, y2 - 35), (x2, y2),
+                                  (0, 255, 0), cv2.FILLED)
+                    cv2.putText(img, name.upper(), (x1 + 6, y2 - 12),
+                                cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
                     detect_and_predict_mask(mask_frame, maskNet)
                     mark_attendance(name)
                 else:
@@ -201,7 +208,8 @@ def set_info():
 def set_display_name():
     conn = sqlite3.connect(db_name)
     displayName = request.json['displayName']
-    conn.execute(f'''UPDATE info SET displayName="{displayName}" WHERE id=1 ''')
+    conn.execute(
+        f'''UPDATE info SET displayName="{displayName}" WHERE id=1 ''')
     conn.commit()
     conn.close()
 
@@ -222,7 +230,8 @@ def set_mask():
 @app.route('/reset')
 def reset():
     conn = sqlite3.connect(db_name)
-    conn.execute(f'''UPDATE info SET name=NULL, temp=NULL, mask=NULL, displayName=NULL WHERE id=1 ''')
+    conn.execute(
+        f'''UPDATE info SET name=NULL, temp=NULL, mask=NULL, displayName=NULL WHERE id=1 ''')
     conn.commit()
     conn.close()
 
@@ -248,25 +257,33 @@ def log_to_firebase():
     purpose = request.json['purpose']
     type_entry_exit = request.json['type']
 
+    payload = {"is_wearing_mask": mask, "temperature": temp,
+               "user_id": user_id, "query_time": firestore.SERVER_TIMESTAMP}
+
+    status_ref = firestore_db.collection("status").document(user_id)
+    status_doc = status_ref.get()
+    status = status_doc.to_dict()
 
     if type_entry_exit == 'entry':
-        firestore_db.collection('visitation_log').add({"is_wearing_mask": mask, "purpose": purpose, "temperature": temp,
-                                                       "time_of_entry": firestore.SERVER_TIMESTAMP,
-                                                       "time_of_exit": None,
-                                                       "user_id": user_id})
-        return "Added to firestore database" 
+        if status['in_building'] == False:
+            payload["entry_or_exit"] = "entry"
+            payload["purpose"] = purpose
+
+            firestore_db.collection('visitation_log').add(payload)
+            status_ref.set({"in_building": True})
+
+            return {"msg": "Entry Added to db", "data": {"user_id": user_id}}
+        return {"msg": "Already in the building", "data": {}}
 
     else:
-        pass
-        # docs = firestore_db.collection("visitation_log").where("user_id", '==', user_id).orderBy("user_id").orderBy(
-        #     'time_of_entry', 'desc').limit(1).stream()
-        # for doc in docs:
-        #     doc_data = doc.to_dict()
-        #     if doc_data['time_of_exit'] is not None:
-        #         firestore_db.collection("visitation_log").document(doc.id).update(
-        #             {"time_of_exit": firestore.SERVER_TIMESTAMP})
+        if status['in_building'] == True:
+            payload["entry_or_exit"] = "exit"
 
-    return "Not Added to firestore database" 
+            firestore_db.collection('visitation_log').add(payload)
+            status_ref.set({"in_building": False})
+
+            return {"msg": "Exit Added to db", "data": {"user_id": user_id}}
+        return {"msg": "Already outside the building", "data": {}}
 
 
 if __name__ == "__main__":
