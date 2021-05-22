@@ -266,7 +266,7 @@ def log_to_firebase():
 
     if type_entry_exit == 'entry':
         if status['in_building'] == False:
-            payload["time_of_entry"] = firestore.SERVER_TIMESTAMP
+            payload["entry_or_exit"] = "entry"
             payload["purpose"] = purpose
 
             firestore_db.collection('visitation_log').add(payload)
@@ -277,7 +277,7 @@ def log_to_firebase():
 
     else:
         if status['in_building'] == True:
-            payload["time_of_exit"] = firestore.SERVER_TIMESTAMP
+            payload["entry_or_exit"] = "exit"
 
             firestore_db.collection('visitation_log').add(payload)
             status_ref.set({"in_building": False})
