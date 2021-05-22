@@ -62,6 +62,11 @@ def index():
     return render_template('index.html', getName=ASK_NAME)
 
 
+@app.route("/new_user")
+def new_user():
+    return render_template("new_user.html")
+
+
 def gen():
     """Video streaming generator function."""
     global ASK_NAME
@@ -247,6 +252,25 @@ def info():
 def get_name(userid):
     doc = firestore_db.collection("users").document(userid).get()
     return doc.to_dict()
+
+
+@app.route("/create_user", methods=["POST"])
+def create_user_on_firebase():
+    user_data = {
+        "address": request.json['address'],
+        "dob": request.json['dob'],
+        "email": request.json['email'],
+        "gender": request.json['gender'],
+        "name": request.json['name'],
+        "phone_number": request.json['phone_number'],
+        "photo_url": request.json['photo_url'],
+        "role": request.json['role'],
+    }
+
+    _, created_user = firestore_db.collection("users").add(user_data)
+    firestore_db.collection("status").document(
+        created_user.id).set({"in_building": False})
+    return {"id": created_user.id}
 
 
 @app.route("/visit_log", methods=["POST"])
