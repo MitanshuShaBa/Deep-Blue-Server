@@ -19,7 +19,7 @@ app = Flask(__name__, static_folder='static')
 db_name = 'tmp.db'
 app.secret_key = 'Deep Blue'
 BASE_URL = "localhost"
-# BASE_URL = "192.168.0.100"
+# BASE_URL = "192.168.69.163"
 cred = credentials.Certificate("deep-blue-asst-firebase-adminsdk-w87p0-6efd8bff07.json")
 firebase_app = firebase_admin.initialize_app(cred)
 firestore_db = firestore.client(firebase_app)
@@ -69,7 +69,7 @@ def gen():
     mask_on_off = None
 
     cap = cv2.VideoCapture(0)
-    # cap = cv2.VideoCapture("rtsp://192.168.0.105:8554/mjpeg/1")
+    # cap = cv2.VideoCapture("rtsp://192.168.22.146:8554/mjpeg/1")
 
     def detect_and_predict_mask(frame, maskNet):
         nonlocal mask_on_off
@@ -89,17 +89,17 @@ def gen():
         if mask > withoutMask and mask > 0.9:
             print(label)
             mask_on_off = 1
-            r = requests.post('http://localhost:5000/mask', json={"mask": 1})
+            r = requests.post(f'http://{BASE_URL}:5000/mask', json={"mask": 1})
         if withoutMask > mask and withoutMask > 0.9:
             print(label)
-            r = requests.post('http://localhost:5000/mask', json={"mask": 0})
+            r = requests.post(f'http://{BASE_URL}:5000/mask', json={"mask": 0})
             mask_on_off = 0
 
     def mark_attendance(user_id_detected):
         nonlocal user_id
         print(user_id_detected, 'was seen')
         user_id = user_id_detected
-        r = requests.post('http://localhost:5000/face_info', json={"name": user_id})
+        r = requests.post(f'http://{BASE_URL}:5000/face_info', json={"name": user_id})
 
     # Read until video is completed
     while CAM_ON:
@@ -196,6 +196,7 @@ def set_info():
 
     return {"name": name}
 
+
 @app.route('/displayName', methods=['POST'])
 def set_display_name():
     conn = sqlite3.connect(db_name)
@@ -243,13 +244,29 @@ def get_name(userid):
 def log_to_firebase():
     user_id = request.json['user_id']
     temp = request.json['temp']
+    mask = bool(int(request.json['mask']))
     purpose = request.json['purpose']
+    type_entry_exit = request.json['type']
 
-    firestore_db.collection('visitation_log').add({"is_wearing_mask": False, "purpose": purpose, "temperature": temp,
-                                                   "time_of_entry": firestore.SERVER_TIMESTAMP, "time_of_exit": None,
-                                                   "user_id": user_id})
 
-    return "Added to firestore database"
+    if type_entry_exit == 'entry':
+        firestore_db.collection('visitation_log').add({"is_wearing_mask": mask, "purpose": purpose, "temperature": temp,
+                                                       "time_of_entry": firestore.SERVER_TIMESTAMP,
+                                                       "time_of_exit": None,
+                                                       "user_id": user_id})
+        return "Added to firestore database" 
+
+    else:
+        pass
+        # docs = firestore_db.collection("visitation_log").where("user_id", '==', user_id).orderBy("user_id").orderBy(
+        #     'time_of_entry', 'desc').limit(1).stream()
+        # for doc in docs:
+        #     doc_data = doc.to_dict()
+        #     if doc_data['time_of_exit'] is not None:
+        #         firestore_db.collection("visitation_log").document(doc.id).update(
+        #             {"time_of_exit": firestore.SERVER_TIMESTAMP})
+
+    return "Not Added to firestore database" 
 
 
 if __name__ == "__main__":
