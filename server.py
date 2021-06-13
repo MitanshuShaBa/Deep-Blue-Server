@@ -289,7 +289,7 @@ def log_to_firebase():
     status = status_doc.to_dict()
 
     if type_entry_exit == 'entry':
-        if status['in_building'] == False:
+        if not status['in_building']:
             payload["entry_or_exit"] = "entry"
             payload["purpose"] = purpose
 
@@ -300,7 +300,7 @@ def log_to_firebase():
         return {"msg": "Already in the building", "data": {}}
 
     else:
-        if status['in_building'] == True:
+        if status['in_building']:
             payload["entry_or_exit"] = "exit"
 
             firestore_db.collection('visitation_log').add(payload)
