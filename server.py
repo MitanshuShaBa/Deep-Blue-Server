@@ -1,4 +1,5 @@
 import datetime
+import io
 import pickle
 import sqlite3
 import time
@@ -9,11 +10,13 @@ import face_recognition
 import firebase_admin
 import numpy as np
 import requests
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, storage
 from flask import Flask, render_template, Response, request, json
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
+from PIL import Image
+from uuid import uuid4
 
 app = Flask(__name__, static_folder='static')
 db_name = 'tmp.db'
@@ -22,8 +25,11 @@ BASE_URL = "localhost"
 # BASE_URL = "192.168.69.163"
 cred = credentials.Certificate(
     "deep-blue-asst-firebase-adminsdk-w87p0-6efd8bff07.json")
-firebase_app = firebase_admin.initialize_app(cred)
+firebase_app = firebase_admin.initialize_app(cred, {
+    'storageBucket': 'deep-blue-asst.appspot.com'
+})
 firestore_db = firestore.client(firebase_app)
+bucket = storage.bucket()
 FRAMES_TO_CAPTURE = 6
 ASK_NAME = False
 CAM_ON = True
@@ -256,20 +262,25 @@ def get_name(userid):
 
 @app.route("/create_user", methods=["POST"])
 def create_user_on_firebase():
-    user_data = {
-        "address": request.json['address'],
-        "dob": request.json['dob'],
-        "email": request.json['email'],
-        "gender": request.json['gender'],
-        "name": request.json['name'],
-        "phone_number": request.json['phone_number'],
-        "photo_url": request.json['photo_url'],
-        "role": request.json['role'],
-    }
+    photos_files = request.files.getlist('photos')
+    user_data = json.loads(request.form['user_data'])
 
     _, created_user = firestore_db.collection("users").add(user_data)
     firestore_db.collection("status").document(
         created_user.id).set({"in_building": False})
+
+    for photo in photos_files:
+        blob = bucket.blob(f"faces/{created_user.id}/{uuid4()}.png")
+        metadata = {"firebaseStorageDownloadTokens": uuid4()}
+        blob.metadata = metadata
+
+        img = Image.open(photo)
+        imgPNG = io.BytesIO()
+        img.save(imgPNG, format='PNG')
+        imgPNG = imgPNG.getvalue()
+
+        blob.upload_from_string(imgPNG, content_type='image/png')
+
     return {"id": created_user.id}
 
 

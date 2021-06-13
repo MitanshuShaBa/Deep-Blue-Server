@@ -12,3 +12,5 @@ imutils
 scipy
 scikit-learn
 matplotlib
+Pillow
+uuid
