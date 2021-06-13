@@ -62,7 +62,9 @@
   <body>
     <h1>New User Page</h1>
     <div class="main-stream">
-      <img id="streaming" src="" alt="Face Image" />
+      <video id="streaming" type="video/mp4" autoplay></video>
+      <button onclick="capture()">Capture</button>
+      <canvas id="canvas" hidden="true"></canvas>
     </div>
     <div class="form1">
       <form id="info_form_1">
@@ -122,6 +124,7 @@
     </div>
 
     <script>
+      let streamingDocument = document.getElementById("streaming");
       let nameDiv = document.getElementById("name");
       let dobDiv = document.getElementById("dob");
       let emailDiv = document.getElementById("email");
@@ -131,6 +134,33 @@
       let tempDiv = document.getElementById("temp");
       let maskDiv = document.getElementById("mask");
       let purposeDiv = document.getElementById("purpose");
+
+      let files = [];
+
+      if (navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices
+          .getUserMedia({ video: true })
+          .then(function (stream) {
+            streamingDocument.srcObject = stream;
+          })
+          .catch(function (error) {
+            console.log("Something went wrong!", error);
+          });
+      }
+
+      function capture() {
+        var canvas = document.getElementById("canvas");
+        var video = document.getElementById("streaming");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas
+          .getContext("2d")
+          .drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        canvas.toBlob((blob) => {
+          const file = new File([blob], "name");
+          files.push(file);
+        });
+      }
 
       fetch("/log")
         .then((response) => {
@@ -161,12 +191,17 @@
           type: "entry",
         };
 
+        const formData = new FormData();
+        formData.append("user_data", JSON.stringify(user_data));
+        for (let i = 0; i < files.length; i++) {
+          formData.append("photos", files[i]);
+        }
+
+        Array.from(formData.keys()).map((el) => console.log(el));
+
         fetch("/create_user", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(user_data),
+          body: formData,
         })
           .then((response) => {
             return response.json();
