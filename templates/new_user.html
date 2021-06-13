@@ -197,8 +197,6 @@
           formData.append("photos", files[i]);
         }
 
-        Array.from(formData.keys()).map((el) => console.log(el));
-
         fetch("/create_user", {
           method: "POST",
           body: formData,
