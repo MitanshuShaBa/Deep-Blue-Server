@@ -265,6 +265,9 @@ def create_user_on_firebase():
     photos_files = request.files.getlist('photos')
     user_data = json.loads(request.form['user_data'])
 
+    if len(photos_files) <= 0:
+        return{"error": "no photos were attached"}
+
     _, created_user = firestore_db.collection("users").add(user_data)
     firestore_db.collection("status").document(
         created_user.id).set({"in_building": False})

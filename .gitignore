@@ -5,3 +5,4 @@ test.py
 /labels-to-name.pickle
 deep-blue-asst-firebase-adminsdk-w87p0-6efd8bff07.json
 tmp.db
+__pycache__
