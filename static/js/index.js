@@ -27,7 +27,6 @@ if (navigator.mediaDevices.getUserMedia) {
 
 const startCapture = () => {
   h3Instruction.innerHTML = "Place your face in the frame";
-  console.log("startCapture called");
   setTimeout(() => {
     let i = 3
   let timer = setInterval(() => {
@@ -41,7 +40,6 @@ const startCapture = () => {
         let j = 0
         let pictureTimer = setInterval(() => {
           capture()
-          console.log("Taking Picture", j+1)
           j++
           if (j==NUM_OF_IMAGES){
             clearInterval(pictureTimer)
@@ -130,11 +128,9 @@ const logEntry = () => {
           return response.json();
         })
         .then((data) => {
-          console.log(data);
-
-          // fetch("/reset")
-          //   .then((response) => response.text())
-          //   .then((data) => console.log(data));
+          fetch("/reset")
+            .then((response) => response.text())
+            .then((data) => console.log(data));
         })
         .catch((err) => console.log("error", err));
     });
