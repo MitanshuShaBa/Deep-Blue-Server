@@ -8,6 +8,8 @@ let addressDiv = document.getElementById("address");
 let tempDiv = document.getElementById("temp");
 let maskDiv = document.getElementById("mask");
 let purposeDiv = document.getElementById("purpose");
+let h3Instruction = document.getElementById("instruction");
+const NUM_OF_IMAGES = 10
 
 let files = [];
 
@@ -16,11 +18,41 @@ if (navigator.mediaDevices.getUserMedia) {
     .getUserMedia({ video: true })
     .then(function (stream) {
       streamingDocument.srcObject = stream;
+      startCapture();
     })
     .catch(function (error) {
       console.log("Something went wrong!", error);
     });
 }
+
+const startCapture = () => {
+  h3Instruction.innerHTML = "Place your face in the frame";
+  console.log("startCapture called");
+  setTimeout(() => {
+    let i = 3
+  let timer = setInterval(() => {
+      h3Instruction.innerHTML = `Pictures will start being taken in ${i}`
+      i--;
+      if (i==-1){
+        clearInterval(timer)
+
+        // Take pictures
+        h3Instruction.innerHTML = ""
+        let j = 0
+        let pictureTimer = setInterval(() => {
+          capture()
+          console.log("Taking Picture", j+1)
+          j++
+          if (j==NUM_OF_IMAGES){
+            clearInterval(pictureTimer)
+            h3Instruction.innerHTML = "Pictures are taken you can fill the information below now"
+          }
+        }, 1000);
+      }
+  }, 1000);
+  }, 3000);
+  
+};
 
 function capture() {
   var canvas = document.getElementById("canvas");
