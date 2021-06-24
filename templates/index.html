@@ -195,6 +195,8 @@
                   .catch((err) => console.log(err));
 
                 userIdDiv.value = userId;
+              } else {
+                window.location.href = "/new_user";
               }
             } else {
               document.getElementById("info_form_1").hidden = true;

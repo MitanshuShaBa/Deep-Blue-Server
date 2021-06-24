@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New User</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl"
+      crossorigin="anonymous"
+    />
+    <style media="screen">
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      h1 {
+        text-align: center;
+        padding-top: 15px;
+        padding-bottom: 20px;
+        letter-spacing: 4px;
+      }
+
+      .main-stream {
+        display: block;
+        margin-left: 37%;
+        margin-right: 25%;
+      }
+
+      .form1 {
+        display: block;
+        text-align: center;
+      }
+      #streaming {
+        height: 265px;
+        margin-bottom: 40px;
+      }
+      #info_form {
+        align-content: center;
+      }
+
+      .main-form {
+        align-content: center;
+      }
+      .info-form {
+        padding-bottom: 10px;
+      }
+      label {
+        display: inline-block;
+        width: 100px;
+      }
+      button {
+        padding: 5px 20px;
+        margin: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>New User Page</h1>
+    <div class="main-stream">
+      <video id="streaming" type="video/mp4" autoplay></video>
+      <h3 id="instruction"></h3>
+      <canvas id="canvas" hidden="true"></canvas>
+    </div>
+    <div class="form1">
+      <form id="info_form_1">
+        <div class="main-form">
+          <div class="info-form">
+            <label for="name">Name : </label>
+            <input id="name" name="name" />
+          </div>
+          <div class="info-form">
+            <label for="dob">Date of Birth : </label>
+            <input id="dob" name="dob" type="date" />
+          </div>
+          <div class="info-form">
+            <label for="email">Email : </label>
+            <input id="email" name="email" />
+          </div>
+          <div class="info-form">
+            <label for="gender">Gender : </label>
+            <select id="gender" name="gender">
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="info-form">
+            <label for="phone_num">Phone Number : </label>
+            <input id="phone_num" name="phone_num" />
+          </div>
+          <div class="info-form">
+            <label for="address">Address : </label>
+            <input id="address" name="address" />
+          </div>
+          <div class="info-form">
+            <label for="temp">Temperature : </label>
+            <input id="temp" name="temp" />
+          </div>
+          <div class="info-form">
+            <label for="mask">Mask : </label>
+            <input id="mask" name="mask" />
+          </div>
+          <div class="info-form">
+            <label for="purpose">Purpose : </label>
+            <input id="purpose" name="purpose" />
+          </div>
+          <div class="info_form">
+            <button
+              class="btn-primary"
+              type="button"
+              name="entry"
+              onclick="logEntry()"
+            >
+              Entry
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+  </body>
+</html>
